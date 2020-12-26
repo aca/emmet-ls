@@ -1,10 +1,10 @@
 # emmet-ls
 
-[coc-emmet](https://github.com/neoclide/coc-emmet) replacement for [completion-nvim](https://github.com/nvim-lua/completion-nvim).
+Emmet support based on LSP.  
+Started as [coc-emmet](https://github.com/neoclide/coc-emmet) replacement for [completion-nvim](https://github.com/nvim-lua/completion-nvim). Should work with any lsp client but not tested.
 
 ![alt](./.image/capture.gif)
 
-Emmet support based on LSP.
 
 #### Install
 ```
@@ -47,7 +47,7 @@ npm install -g emmet-ls
   ```
   div>h.
   ```
-  will be expanded to 
+  And it will be expanded to 
   ```
   <div>
     <h class=""></h>
