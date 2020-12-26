@@ -35,3 +35,26 @@ npm install -g emmet-ls
     on_attach = on_attach;
   }
   ```
+- [completion-nvim](https://github.com/nvim-lua/completion-nvim)
+
+  Completion is triggered if completion_trigger_character is entered. 
+  It's limitation of completion-nvim.
+
+  ```lua
+  let g:completion_trigger_character = ['.']
+  ```
+  If you have set it like this, You will have to add trailing '.' after emmet abbreviation.
+  ```
+  div>h.
+  ```
+  will be expanded to 
+  ```
+  <div>
+    <h class=""></h>
+  </div>
+  ```
+
+
+
+
+
