@@ -1,23 +1,19 @@
 #!/usr/bin/env node
 
+import expand, { extract } from "emmet";
+import { TextDocument } from "vscode-languageserver-textdocument";
 import {
-  createConnection,
-  TextDocuments,
-  Diagnostic,
-  DiagnosticSeverity,
-  ProposedFeatures,
-  InitializeParams,
-  DidChangeConfigurationNotification,
   CompletionItem,
   CompletionItemKind,
-  TextDocumentPositionParams,
-  TextDocumentSyncKind,
+  createConnection,
+  DidChangeConfigurationNotification,
+  InitializeParams,
   InitializeResult,
-} from "vscode-languageserver";
-
-import expand, { extract } from "emmet";
-
-import { TextDocument } from "vscode-languageserver-textdocument";
+  ProposedFeatures,
+  TextDocumentPositionParams,
+  TextDocuments,
+  TextDocumentSyncKind
+} from "vscode-languageserver/node";
 
 let connection = createConnection(ProposedFeatures.all);
 
@@ -116,6 +112,12 @@ connection.onDidChangeWatchedFiles((_change) => {
   connection.console.log("We received an file change event");
 });
 
+connection.onCompletionResolve(
+  (item: CompletionItem): CompletionItem => {
+    // need to find a way to update cursor after completion
+    return item;
+  }
+);
 connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     try {
@@ -126,6 +128,12 @@ connection.onCompletion(
       let linenr = _textDocumentPosition.position.line;
       let line = String(content.split(/\r?\n/g)[linenr]);
       let character = _textDocumentPosition.position.character;
+      // cheat nvim to add space prefix on newline
+      const tabdata = /\s*/.exec(line);
+      let prefix = "";
+      if (tabdata?.[0]) {
+        prefix = tabdata[0];
+      }
       let extractPosition =
         languageId != "css"
           ? extract(line, character)
@@ -143,11 +151,15 @@ connection.onCompletion(
           ? expand(abbreviation)
           : expand(abbreviation, { type: "stylesheet" });
 
+      expanded = expanded.replace(/(?:\r\n|\r|\n)/g, (match) => {
+        return `${match}${prefix}`;
+      });
+
       return [
         {
           label: abbreviation,
           detail: "emmet",
-          documentation: "documentation",
+          documentation: expanded,
           textEdit: {
             range: {
               start: {
