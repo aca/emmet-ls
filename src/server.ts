@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
-import expand, { extract } from "emmet";
-import { TextDocument } from "vscode-languageserver-textdocument";
+import {
+  extract,
+  parseMarkup,
+  parseStylesheet,
+  resolveConfig,
+  stringifyMarkup,
+  stringifyStylesheet,
+} from 'emmet';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
   CompletionItem,
   CompletionItemKind,
@@ -12,8 +19,8 @@ import {
   ProposedFeatures,
   TextDocumentPositionParams,
   TextDocuments,
-  TextDocumentSyncKind
-} from "vscode-languageserver/node";
+  TextDocumentSyncKind,
+} from 'vscode-languageserver/node';
 
 let connection = createConnection(ProposedFeatures.all);
 
@@ -70,7 +77,7 @@ connection.onInitialized(() => {
   }
   if (hasWorkspaceFolderCapability) {
     connection.workspace.onDidChangeWorkspaceFolders((_event) => {
-      connection.console.log("Workspace folder change event received.");
+      connection.console.log('Workspace folder change event received.');
     });
   }
 });
@@ -97,7 +104,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
   if (!result) {
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
-      section: "languageServerExample",
+      section: 'languageServerExample',
     });
     documentSettings.set(resource, result);
   }
@@ -108,13 +115,8 @@ documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri);
 });
 
-connection.onDidChangeWatchedFiles((_change) => {
-  connection.console.log("We received an file change event");
-});
-
 connection.onCompletionResolve(
   (item: CompletionItem): CompletionItem => {
-    // need to find a way to update cursor after completion
     return item;
   }
 );
@@ -122,59 +124,71 @@ connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     try {
       let docs = documents.get(_textDocumentPosition.textDocument.uri);
-      if (!docs) throw "failed to find document";
+      if (!docs) throw 'failed to find document';
       let languageId = docs.languageId;
       let content = docs.getText();
       let linenr = _textDocumentPosition.position.line;
       let line = String(content.split(/\r?\n/g)[linenr]);
       let character = _textDocumentPosition.position.character;
-      // cheat nvim to add space prefix on newline
-      const tabdata = /\s*/.exec(line);
-      let prefix = "";
-      if (tabdata?.[0]) {
-        prefix = tabdata[0];
-      }
       let extractPosition =
-        languageId != "css"
+        languageId != 'css'
           ? extract(line, character)
-          : extract(line, character, { type: "stylesheet" });
+          : extract(line, character, { type: 'stylesheet' });
 
       if (extractPosition?.abbreviation == undefined) {
-        throw "failed to parse line";
+        throw 'failed to parse line';
       }
 
       let left = extractPosition.start;
       let right = extractPosition.start;
       let abbreviation = extractPosition.abbreviation;
-      let expanded =
-        languageId != "css"
-          ? expand(abbreviation)
-          : expand(abbreviation, { type: "stylesheet" });
-
-      expanded = expanded.replace(/(?:\r\n|\r|\n)/g, (match) => {
-        return `${match}${prefix}`;
-      });
+      let textResult = '';
+      if (languageId === 'html') {
+        const htmlconfig = resolveConfig({
+          options: {
+            'output.field': (index, placeholder) =>
+              ` \$${index}${placeholder ? ':' + placeholder : ''} `,
+          },
+        });
+        const markup = parseMarkup(abbreviation, htmlconfig);
+        textResult = stringifyMarkup(markup, htmlconfig);
+      } else {
+        const cssConfig = resolveConfig({
+          type: 'stylesheet',
+          options: {
+            'output.field': (index, placeholder) =>
+              ` \$\{${index}${placeholder ? ':' + placeholder : ''}\} `,
+          },
+        });
+        const markup = parseStylesheet(abbreviation, cssConfig);
+        textResult = stringifyStylesheet(markup, cssConfig);
+      }
+      const range = {
+        start: {
+          line: linenr,
+          character: left,
+        },
+        end: {
+          line: linenr,
+          character: right,
+        },
+      };
 
       return [
         {
           label: abbreviation,
-          detail: "emmet",
-          documentation: expanded,
+          detail: abbreviation,
+          documentation: textResult,
           textEdit: {
-            range: {
-              start: {
-                line: linenr,
-                character: left,
-              },
-              end: {
-                line: linenr,
-                character: right,
-              },
-            },
-            newText: "" + expanded,
+            range,
+            newText  : textResult,
+            // newText: textResult.replace(/\$\{\d*\}/g,''),
           },
           kind: CompletionItemKind.Snippet,
-          data: 1,
+          data: {
+            range,
+            textResult,
+          },
         },
       ];
     } catch (error) {
