@@ -6,7 +6,7 @@ import {
   parseStylesheet,
   resolveConfig,
   stringifyMarkup,
-  stringifyStylesheet,
+  stringifyStylesheet
 } from 'emmet';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -16,10 +16,11 @@ import {
   DidChangeConfigurationNotification,
   InitializeParams,
   InitializeResult,
+  InsertTextFormat,
   ProposedFeatures,
   TextDocumentPositionParams,
   TextDocuments,
-  TextDocumentSyncKind,
+  TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 
 let connection = createConnection(ProposedFeatures.all);
@@ -117,6 +118,7 @@ documents.onDidClose((e) => {
 
 connection.onCompletionResolve(
   (item: CompletionItem): CompletionItem => {
+    item.insertTextFormat = InsertTextFormat.Snippet;
     return item;
   }
 );
@@ -147,7 +149,7 @@ connection.onCompletion(
         const htmlconfig = resolveConfig({
           options: {
             'output.field': (index, placeholder) =>
-              ` \$${index}${placeholder ? ':' + placeholder : ''} `,
+              ` \$\{${index}${placeholder ? ':' + placeholder : ''}\} `,
           },
         });
         const markup = parseMarkup(abbreviation, htmlconfig);
