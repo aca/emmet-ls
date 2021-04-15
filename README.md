@@ -15,23 +15,15 @@ npm install -g emmet-ls
 
 - [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
   ```lua
-  local nvim_lsp = require'lspconfig'
-  local configs = require'lspconfig/configs'
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
-  capabilities.textDocument.completion.completionItem.snippetSupport = true
-
-  configs.emmet_ls = {
+  require'lspconfig/configs'.emmet_ls = {
     default_config = {
-      cmd = {'emmet-ls', '--stdio'};
-      filetypes = {'html', 'css'};
-      root_dir = function()
-        return vim.loop.cwd()
-      end;
-      settings = {};
-    };
+      cmd = {'emmet-ls', '--stdio'},
+      filetypes = {'html', 'css'},
+      root_dir = require'lspconfig'.util.root_pattern(".git", vim.fn.getcwd()),
+    }
   }
 
-  nvim_lsp.emmet_ls.setup{
+  require'lspconfig'.emmet_ls.setup{
     on_attach = on_attach;
   }
   ```
