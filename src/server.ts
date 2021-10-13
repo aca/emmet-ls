@@ -116,12 +116,6 @@ documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri);
 });
 
-connection.onCompletionResolve(
-  (item: CompletionItem): CompletionItem => {
-    item.insertTextFormat = InsertTextFormat.Snippet;
-    return item;
-  }
-);
 connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     try {
@@ -178,6 +172,7 @@ connection.onCompletion(
 
       return [
         {
+          insertTextFormat: InsertTextFormat.Snippet,
           label: abbreviation,
           detail: abbreviation,
           documentation: textResult,
