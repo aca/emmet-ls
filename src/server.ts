@@ -143,7 +143,7 @@ connection.onCompletion(
         const htmlconfig = resolveConfig({
           options: {
             'output.field': (index, placeholder) =>
-              ` \$\{${index}${placeholder ? ':' + placeholder : ''}\} `,
+              `\$\{${index}${placeholder ? ':' + placeholder : ''}\}`,
           },
         });
         const markup = parseMarkup(abbreviation, htmlconfig);
@@ -153,7 +153,7 @@ connection.onCompletion(
           type: 'stylesheet',
           options: {
             'output.field': (index, placeholder) =>
-              ` \$\{${index}${placeholder ? ':' + placeholder : ''}\} `,
+              `\$\{${index}${placeholder ? ':' + placeholder : ''}\}`,
           },
         });
         const markup = parseStylesheet(abbreviation, cssConfig);
