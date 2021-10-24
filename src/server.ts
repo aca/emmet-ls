@@ -6,9 +6,9 @@ import {
   parseStylesheet,
   resolveConfig,
   stringifyMarkup,
-  stringifyStylesheet
-} from 'emmet';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+  stringifyStylesheet,
+} from "emmet";
+import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   CompletionItem,
   CompletionItemKind,
@@ -20,8 +20,8 @@ import {
   ProposedFeatures,
   TextDocumentPositionParams,
   TextDocuments,
-  TextDocumentSyncKind
-} from 'vscode-languageserver/node';
+  TextDocumentSyncKind,
+} from "vscode-languageserver/node";
 
 let connection = createConnection(ProposedFeatures.all);
 
@@ -49,12 +49,65 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities.textDocument.publishDiagnostics.relatedInformation
   );
 
+  const triggerCharacters = [
+    ">",
+    ")",
+    "]",
+    "}",
+
+    "@",
+    "*",
+    "$",
+    "+",
+    
+    // alpha
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+
+    // num
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+  ];
+
   const result: InitializeResult = {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       // Tell the client that this server supports code completion.
       completionProvider: {
         resolveProvider: true,
+        triggerCharacters: triggerCharacters,
       },
     },
   };
@@ -78,7 +131,7 @@ connection.onInitialized(() => {
   }
   if (hasWorkspaceFolderCapability) {
     connection.workspace.onDidChangeWorkspaceFolders((_event) => {
-      connection.console.log('Workspace folder change event received.');
+      connection.console.log("Workspace folder change event received.");
     });
   }
 });
@@ -105,7 +158,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
   if (!result) {
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
-      section: 'languageServerExample',
+      section: "languageServerExample",
     });
     documentSettings.set(resource, result);
   }
@@ -120,40 +173,40 @@ connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     try {
       let docs = documents.get(_textDocumentPosition.textDocument.uri);
-      if (!docs) throw 'failed to find document';
+      if (!docs) throw "failed to find document";
       let languageId = docs.languageId;
       let content = docs.getText();
       let linenr = _textDocumentPosition.position.line;
       let line = String(content.split(/\r?\n/g)[linenr]);
       let character = _textDocumentPosition.position.character;
       let extractPosition =
-        languageId != 'css'
+        languageId != "css"
           ? extract(line, character)
-          : extract(line, character, { type: 'stylesheet' });
+          : extract(line, character, { type: "stylesheet" });
 
       if (extractPosition?.abbreviation == undefined) {
-        throw 'failed to parse line';
+        throw "failed to parse line";
       }
 
       let left = extractPosition.start;
       let right = extractPosition.start;
       let abbreviation = extractPosition.abbreviation;
-      let textResult = '';
-      if (languageId === 'html') {
+      let textResult = "";
+      if (languageId === "html") {
         const htmlconfig = resolveConfig({
           options: {
-            'output.field': (index, placeholder) =>
-              `\$\{${index}${placeholder ? ':' + placeholder : ''}\}`,
+            "output.field": (index, placeholder) =>
+              `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
           },
         });
         const markup = parseMarkup(abbreviation, htmlconfig);
         textResult = stringifyMarkup(markup, htmlconfig);
       } else {
         const cssConfig = resolveConfig({
-          type: 'stylesheet',
+          type: "stylesheet",
           options: {
-            'output.field': (index, placeholder) =>
-              `\$\{${index}${placeholder ? ':' + placeholder : ''}\}`,
+            "output.field": (index, placeholder) =>
+              `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
           },
         });
         const markup = parseStylesheet(abbreviation, cssConfig);
@@ -178,7 +231,7 @@ connection.onCompletion(
           documentation: textResult,
           textEdit: {
             range,
-            newText  : textResult,
+            newText: textResult,
             // newText: textResult.replace(/\$\{\d*\}/g,''),
           },
           kind: CompletionItemKind.Snippet,
