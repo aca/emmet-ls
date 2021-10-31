@@ -25,7 +25,7 @@ npm install -g emmet-ls
     configs.emmet_ls = {    
       default_config = {    
         cmd = {'emmet-ls', '--stdio'};
-        filetypes = {'html', 'css'};
+        filetypes = {'html', 'css', 'blade'};
         root_dir = function(fname)    
           return vim.loop.cwd()
         end;    
