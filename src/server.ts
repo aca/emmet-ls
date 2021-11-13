@@ -192,7 +192,7 @@ connection.onCompletion(
       let right = extractPosition.start;
       let abbreviation = extractPosition.abbreviation;
       let textResult = "";
-      if (languageId === "html") {
+      if (languageId === "html" || languageId === "blade") {
         const htmlconfig = resolveConfig({
           options: {
             "output.field": (index, placeholder) =>
