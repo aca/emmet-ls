@@ -189,7 +189,7 @@ connection.onCompletion(
       }
 
       let left = extractPosition.start;
-      let right = extractPosition.start;
+      let right = extractPosition.end;
       let abbreviation = extractPosition.abbreviation;
       let textResult = "";
       if (languageId === "html" || languageId === "blade") {
