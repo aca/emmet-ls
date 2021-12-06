@@ -192,7 +192,8 @@ connection.onCompletion(
       let right = extractPosition.end;
       let abbreviation = extractPosition.abbreviation;
       let textResult = "";
-      if (languageId === "html" || languageId === "blade") {
+      const htmlLanguages = ["html", "blade", "twig"];
+      if (htmlLanguages.includes(languageId)) {
         const htmlconfig = resolveConfig({
           options: {
             "output.field": (index, placeholder) =>
