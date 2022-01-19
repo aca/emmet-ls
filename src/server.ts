@@ -192,7 +192,9 @@ connection.onCompletion(
       let right = extractPosition.end;
       let abbreviation = extractPosition.abbreviation;
       let textResult = "";
-      const htmlLanguages = ["html", "blade", "twig", "eruby", "erb"];
+
+      const htmlLanguages = ["html", "blade", "twig", "eruby", "erb", "razor"];
+
       if (htmlLanguages.includes(languageId)) {
         const htmlconfig = resolveConfig({
           options: {
