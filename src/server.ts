@@ -59,7 +59,7 @@ connection.onInitialize((params: InitializeParams) => {
     "*",
     "$",
     "+",
-    
+
     // alpha
     "a",
     "b",
@@ -193,7 +193,20 @@ connection.onCompletion(
       let abbreviation = extractPosition.abbreviation;
       let textResult = "";
 
-      const htmlLanguages = ["html", "blade", "twig", "eruby", "erb", "razor"];
+      const htmlLanguages = [
+        "html",
+        "blade",
+        "twig",
+        "eruby",
+        "erb",
+        "razor",
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx",
+      ];
 
       if (htmlLanguages.includes(languageId)) {
         const htmlconfig = resolveConfig({
