@@ -206,6 +206,7 @@ connection.onCompletion(
         "typescript",
         "typescriptreact",
         "typescript.tsx",
+        "heex"
       ];
 
       if (htmlLanguages.includes(languageId)) {
