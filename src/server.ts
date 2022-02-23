@@ -206,6 +206,7 @@ connection.onCompletion(
         "typescript",
         "typescriptreact",
         "typescript.tsx",
+        "liquid",
       ];
 
       if (htmlLanguages.includes(languageId)) {
