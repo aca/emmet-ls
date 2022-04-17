@@ -23,17 +23,16 @@ import {
   TextDocumentSyncKind,
 } from "vscode-languageserver/node";
 
-let connection = createConnection(ProposedFeatures.all);
+const connection = createConnection(ProposedFeatures.all);
 
 // Create a simple text document manager.
-let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
-let hasDiagnosticRelatedInformationCapability: boolean = false;
 
 connection.onInitialize((params: InitializeParams) => {
-  let capabilities = params.capabilities;
+  const capabilities = params.capabilities;
 
   // Does the client support the `workspace/configuration` request?
   // If not, we fall back using global settings.
@@ -42,11 +41,6 @@ connection.onInitialize((params: InitializeParams) => {
   );
   hasWorkspaceFolderCapability = !!(
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
-  );
-  hasDiagnosticRelatedInformationCapability = !!(
-    capabilities.textDocument &&
-    capabilities.textDocument.publishDiagnostics &&
-    capabilities.textDocument.publishDiagnostics.relatedInformation
   );
 
   const triggerCharacters = [
@@ -141,29 +135,8 @@ interface ExampleSettings {
   maxNumberOfProblems: number;
 }
 
-// The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
-
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
-
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
-  if (!hasConfigurationCapability) {
-    return Promise.resolve(globalSettings);
-  }
-  let result = documentSettings.get(resource);
-  if (!result) {
-    result = connection.workspace.getConfiguration({
-      scopeUri: resource,
-      section: "languageServerExample",
-    });
-    documentSettings.set(resource, result);
-  }
-  return result;
-}
+const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
 
 documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri);
@@ -190,42 +163,42 @@ const stylesheetIdentifiers = [
 connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     try {
-      let docs = documents.get(_textDocumentPosition.textDocument.uri);
+      const docs = documents.get(_textDocumentPosition.textDocument.uri);
       if (!docs) throw "failed to find document";
-      let languageId = docs.languageId;
-      let content = docs.getText();
-      let linenr = _textDocumentPosition.position.line;
-      let line = String(content.split(/\r?\n/g)[linenr]);
-      let character = _textDocumentPosition.position.character;
+      const languageId = docs.languageId;
+      const content = docs.getText();
+      const linenr = _textDocumentPosition.position.line;
+      const line = String(content.split(/\r?\n/g)[linenr]);
+      const character = _textDocumentPosition.position.character;
 
       // Non-stylesheet identifiers are treated as markup.
       const isStylesheet = stylesheetIdentifiers.includes(languageId);
-      // Emmet uses the same identifiers for stylesheets as language servers.
-      // Unfortunately some markup Emmet syntax names are different from LSP identifiers.
+      // Emmet syntax names are the same as language server identifiers for stylesheets,
+      // but not for markup languages.
       // Treat markup languages as html if not in markupIdentifierOverrides.
       const syntax = isStylesheet ? languageId : markupIdentifierOverrides[languageId] ?? 'html';
       const type = isStylesheet ? 'stylesheet' : 'markup';
 
-      const extractPosition = extract(line, character, { type })
+      const extractedPosition = extract(line, character, { type });
 
-      if (extractPosition?.abbreviation == undefined) {
+      if (extractedPosition?.abbreviation == undefined) {
         throw "failed to parse line";
       }
 
-      let left = extractPosition.start;
-      let right = extractPosition.end;
-      let abbreviation = extractPosition.abbreviation;
-      let textResult = "";
+      const left = extractedPosition.start;
+      const right = extractedPosition.end;
+      const abbreviation = extractedPosition.abbreviation;
 
       const emmetConfig = resolveConfig({
-          syntax,
-          type,
-          options: {
-            "output.field": (index, placeholder) =>
-              `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
-          },
-        });
+        syntax,
+        type,
+        options: {
+          "output.field": (index, placeholder) =>
+            `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
+        },
+      });
 
+      let textResult = "";
       if (!isStylesheet) {
         const markup = parseMarkup(abbreviation, emmetConfig);
         textResult = stringifyMarkup(markup, emmetConfig);
