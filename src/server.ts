@@ -169,6 +169,24 @@ documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri);
 });
 
+// For list of language identifiers, see:
+// https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocumentItem
+// For list of supported syntax options, see:
+// https://github.com/emmetio/emmet/blob/master/src/config.ts#L280-L283
+const markupIdentifierOverrides = {
+  // Identifiers not in stylesheetIdentifiers are treated as markup.
+  // Markup languages are treated as html syntax by default.
+  // So html, blade, razor and the like don't need to be listed.
+  javascriptreact: 'jsx',
+  typescriptreact: 'jsx',
+} as { [key: string]: string | undefined };
+const stylesheetIdentifiers = [
+  'css',
+  'sass',
+  'scss',
+  'less'
+];
+
 connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     try {
@@ -179,10 +197,16 @@ connection.onCompletion(
       let linenr = _textDocumentPosition.position.line;
       let line = String(content.split(/\r?\n/g)[linenr]);
       let character = _textDocumentPosition.position.character;
-      let extractPosition =
-        languageId != "css"
-          ? extract(line, character)
-          : extract(line, character, { type: "stylesheet" });
+
+      // Non-stylesheet identifiers are treated as markup.
+      const isStylesheet = stylesheetIdentifiers.includes(languageId);
+      // Emmet uses the same identifiers for stylesheets as language servers.
+      // Unfortunately some markup Emmet syntax names are different from LSP identifiers.
+      // Treat markup languages as html if not in markupIdentifierOverrides.
+      const syntax = isStylesheet ? languageId : markupIdentifierOverrides[languageId] ?? 'html';
+      const type = isStylesheet ? 'stylesheet' : 'markup';
+
+      const extractPosition = extract(line, character, { type })
 
       if (extractPosition?.abbreviation == undefined) {
         throw "failed to parse line";
@@ -193,40 +217,21 @@ connection.onCompletion(
       let abbreviation = extractPosition.abbreviation;
       let textResult = "";
 
-      const htmlLanguages = [
-        "html",
-        "blade",
-        "twig",
-        "eruby",
-        "erb",
-        "razor",
-        "javascript",
-        "javascriptreact",
-        "javascript.jsx",
-        "typescript",
-        "typescriptreact",
-        "typescript.tsx",
-      ];
+      const emmetConfig = resolveConfig({
+          syntax,
+          type,
+          options: {
+            "output.field": (index, placeholder) =>
+              `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
+          },
+        });
 
-      if (htmlLanguages.includes(languageId)) {
-        const htmlconfig = resolveConfig({
-          options: {
-            "output.field": (index, placeholder) =>
-              `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
-          },
-        });
-        const markup = parseMarkup(abbreviation, htmlconfig);
-        textResult = stringifyMarkup(markup, htmlconfig);
+      if (!isStylesheet) {
+        const markup = parseMarkup(abbreviation, emmetConfig);
+        textResult = stringifyMarkup(markup, emmetConfig);
       } else {
-        const cssConfig = resolveConfig({
-          type: "stylesheet",
-          options: {
-            "output.field": (index, placeholder) =>
-              `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
-          },
-        });
-        const markup = parseStylesheet(abbreviation, cssConfig);
-        textResult = stringifyStylesheet(markup, cssConfig);
+        const markup = parseStylesheet(abbreviation, emmetConfig);
+        textResult = stringifyStylesheet(markup, emmetConfig);
       }
       const range = {
         start: {
