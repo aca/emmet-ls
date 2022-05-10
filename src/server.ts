@@ -208,9 +208,18 @@ connection.onCompletion(
         "typescript.tsx",
       ];
 
+      const jsxLanguages = [
+        "javascriptreact",
+        "typescriptreact",
+        "javascript.jsx",
+        "typescript.tsx",
+      ];
+
       if (htmlLanguages.includes(languageId)) {
+        const enableJsx = jsxLanguages.includes(languageId);
         const htmlconfig = resolveConfig({
           options: {
+            "jsx.enabled": enableJsx,
             "output.field": (index, placeholder) =>
               `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
           },
