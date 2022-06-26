@@ -7,6 +7,7 @@ import {
   resolveConfig,
   stringifyMarkup,
   stringifyStylesheet,
+  Options
 } from "emmet";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
@@ -31,6 +32,12 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
 
+type EmmetOptions = Partial<Options>;
+const defaultEmmetOptions: EmmetOptions = {
+  "output.field": (index, placeholder) => `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`
+}; 
+let emmetOptions: EmmetOptions = defaultEmmetOptions;
+
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
 
@@ -42,6 +49,11 @@ connection.onInitialize((params: InitializeParams) => {
   hasWorkspaceFolderCapability = !!(
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
   );
+
+  emmetOptions = {
+    ...defaultEmmetOptions,
+    ...(params.initializationOptions || {})
+  };
 
   const triggerCharacters = [
     ">",
@@ -130,18 +142,6 @@ connection.onInitialized(() => {
   }
 });
 
-// The example settings
-interface ExampleSettings {
-  maxNumberOfProblems: number;
-}
-
-// Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
-
-documents.onDidClose((e) => {
-  documentSettings.delete(e.document.uri);
-});
-
 // For list of language identifiers, see:
 // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocumentItem
 // For list of supported syntax options, see:
@@ -192,10 +192,7 @@ connection.onCompletion(
       const emmetConfig = resolveConfig({
         syntax,
         type,
-        options: {
-          "output.field": (index, placeholder) =>
-            `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
-        },
+        options: emmetOptions
       });
 
       let textResult = "";
