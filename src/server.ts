@@ -2,12 +2,12 @@
 
 import {
   extract,
+  GlobalConfig,
   parseMarkup,
   parseStylesheet,
   resolveConfig,
   stringifyMarkup,
   stringifyStylesheet,
-  Options
 } from "emmet";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
@@ -31,12 +31,7 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
-
-type EmmetOptions = Partial<Options>;
-const defaultEmmetOptions: EmmetOptions = {
-  "output.field": (index, placeholder) => `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`
-}; 
-let emmetOptions: EmmetOptions = defaultEmmetOptions;
+let globalConfig: GlobalConfig = {};
 
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
@@ -50,10 +45,7 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
   );
 
-  emmetOptions = {
-    ...defaultEmmetOptions,
-    ...(params.initializationOptions || {})
-  };
+  globalConfig = params.initializationOptions || {};
 
   const triggerCharacters = [
     ">",
@@ -192,8 +184,11 @@ connection.onCompletion(
       const emmetConfig = resolveConfig({
         syntax,
         type,
-        options: emmetOptions
-      });
+        options: {
+          "output.field": (index, placeholder) =>
+            `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
+        },
+      }, globalConfig);
 
       let textResult = "";
       if (!isStylesheet) {
