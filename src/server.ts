@@ -2,6 +2,7 @@
 
 import {
   extract,
+  GlobalConfig,
   parseMarkup,
   parseStylesheet,
   resolveConfig,
@@ -30,6 +31,7 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
+let globalConfig: GlobalConfig = {};
 
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
@@ -42,6 +44,8 @@ connection.onInitialize((params: InitializeParams) => {
   hasWorkspaceFolderCapability = !!(
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
   );
+
+  globalConfig = params.initializationOptions || {};
 
   const triggerCharacters = [
     ">",
@@ -130,18 +134,6 @@ connection.onInitialized(() => {
   }
 });
 
-// The example settings
-interface ExampleSettings {
-  maxNumberOfProblems: number;
-}
-
-// Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
-
-documents.onDidClose((e) => {
-  documentSettings.delete(e.document.uri);
-});
-
 // For list of language identifiers, see:
 // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocumentItem
 // For list of supported syntax options, see:
@@ -196,7 +188,7 @@ connection.onCompletion(
           "output.field": (index, placeholder) =>
             `\$\{${index}${placeholder ? ":" + placeholder : ""}\}`,
         },
-      });
+      }, globalConfig);
 
       let textResult = "";
       if (!isStylesheet) {
