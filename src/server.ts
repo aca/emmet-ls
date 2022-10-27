@@ -235,6 +235,17 @@ connection.onCompletion(
     }
 );
 
+connection.onRequest("emmet/parseMarkup", (params) => {
+  if (params?.text == null) {
+    return { errno: 1, message: "Text param not found" };
+  }
+  const parsed = parseMarkup(params.text, {
+    options: { inlineElements: [] },
+    snippets: {},
+  } as unknown as any);
+  return { data: parsed, errno: 0 };
+});
+
 documents.listen(connection);
 
 connection.listen();
