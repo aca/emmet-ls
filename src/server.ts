@@ -142,14 +142,18 @@ const markupIdentifierOverrides = {
     // Identifiers not in stylesheetIdentifiers are treated as markup.
     // Markup languages are treated as html syntax by default.
     // So html, blade, razor and the like don't need to be listed.
+    javascript: 'js',
     javascriptreact: 'jsx',
+    pug: 'pug',
+    svelte: 'svelte',
     typescriptreact: 'jsx',
+    vue: 'vue',
 } as { [key: string]: string | undefined };
 const stylesheetIdentifiers = [
     'css',
     'sass',
     'scss',
-    'less'
+    'less',
 ];
 
 connection.onCompletion(

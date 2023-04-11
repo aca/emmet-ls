@@ -26,7 +26,7 @@ capabilities.textDocument.completion.completionItem.snippetSupport = true
 lspconfig.emmet_ls.setup({
     -- on_attach = on_attach,
     capabilities = capabilities,
-    filetypes = { 'html', 'typescriptreact', 'javascriptreact', 'css', 'sass', 'scss', 'less' },
+    filetypes = { "css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue" },
     init_options = {
       html = {
         options = {
@@ -40,5 +40,5 @@ lspconfig.emmet_ls.setup({
 
 ##### Supported Filetypes
 
-- `html`, `typescriptreact`, `javascriptreact`, `css`, `sass`, `scss` and `less` filetypes are fully supported.
+- `html`, `pug`, `typescriptreact`, `javascript`, `javascriptreact`, `svelte`, `vue`, `css`, `sass`, `scss` and `less` filetypes are fully supported.
 - Any other filetype is treated as `html`.
