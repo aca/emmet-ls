@@ -53,6 +53,7 @@ connection.onInitialize((params: InitializeParams) => {
         "]",
         "}",
 
+        "!",
         "@",
         "*",
         "$",
