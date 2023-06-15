@@ -147,7 +147,7 @@ const markupIdentifierOverrides = {
     javascriptreact: 'jsx',
     pug: 'pug',
     svelte: 'svelte',
-    typescriptreact: 'jsx',
+    typescriptreact: 'tsx',
     vue: 'vue',
 } as { [key: string]: string | undefined };
 const stylesheetIdentifiers = [
